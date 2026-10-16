@@ -8,11 +8,11 @@ namespace ProcessEngine
 {
     public class MainForm : Form
     {
-        private ListBox lstProcesses;
-        private ComboBox cmbDlls;
-        private Button btnRefresh;
-        private Button btnInject;
-        private Label lblStatus;
+        private ListBox lstProcesses = null!;
+        private ComboBox cmbDlls = null!;
+        private Button btnRefresh = null!;
+        private Button btnInject = null!;
+        private Label lblStatus = null!;
 
         private string dllsDirectory => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dlls");
 
@@ -32,7 +32,6 @@ namespace ProcessEngine
 
         private void InitializeComponents()
         {
-            // Süreç Listesi
             lstProcesses = new ListBox
             {
                 Location = new Point(12, 12),
@@ -40,7 +39,6 @@ namespace ProcessEngine
             };
             this.Controls.Add(lstProcesses);
 
-            // DLL Seçim Kutusu
             cmbDlls = new ComboBox
             {
                 Location = new Point(375, 12),
@@ -49,7 +47,6 @@ namespace ProcessEngine
             };
             this.Controls.Add(cmbDlls);
 
-            // Yenile Butonu
             btnRefresh = new Button
             {
                 Text = "Listeyi Yenile",
@@ -59,7 +56,6 @@ namespace ProcessEngine
             btnRefresh.Click += (s, e) => { LoadProcesses(); LoadDlls(); };
             this.Controls.Add(btnRefresh);
 
-            // Enjekte Et Butonu
             btnInject = new Button
             {
                 Text = "DLL Enjekte Et",
@@ -72,7 +68,6 @@ namespace ProcessEngine
             btnInject.Click += BtnInject_Click;
             this.Controls.Add(btnInject);
 
-            // Durum Etiketi
             lblStatus = new Label
             {
                 Text = "Durum: Hazır. dlls/ klasörüne DLL ekleyebilirsiniz.",
@@ -117,7 +112,7 @@ namespace ProcessEngine
                 cmbDlls.SelectedIndex = 0;
         }
 
-        private void BtnInject_Click(object sender, EventArgs e)
+        private void BtnInject_Click(object? sender, EventArgs e)
         {
             if (lstProcesses.SelectedItem == null)
             {
@@ -131,12 +126,16 @@ namespace ProcessEngine
                 return;
             }
 
-            string selectedProcessText = lstProcesses.SelectedItem.ToString();
+            string selectedProcessText = lstProcesses.SelectedItem.ToString() ?? "";
+            if (string.IsNullOrEmpty(selectedProcessText)) return;
+
             int pidStart = selectedProcessText.LastIndexOf("PID: ") + 5;
             int pidEnd = selectedProcessText.LastIndexOf(")");
+            if (pidStart < 5 || pidEnd <= pidStart) return;
+
             int pid = int.Parse(selectedProcessText.Substring(pidStart, pidEnd - pidStart));
 
-            string dllName = cmbDlls.SelectedItem.ToString();
+            string dllName = cmbDlls.SelectedItem.ToString() ?? "";
             string dllFullPath = Path.Combine(dllsDirectory, dllName);
 
             bool success = MemoryEngine.InjectDll(pid, dllFullPath);
