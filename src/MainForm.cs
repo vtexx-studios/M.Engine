@@ -76,7 +76,7 @@ namespace ProcessEngine
             lblStatus = new Label
             {
                 Text = "Durum: Hazır. dlls/ klasörüne DLL ekleyebilirsiniz.",
-                Location = new Point(12, 375etry => { }),
+                Location = new Point(12, 375),
                 Size = new Size(560, 25),
                 ForeColor = Color.DarkSlateGray
             };
@@ -132,7 +132,6 @@ namespace ProcessEngine
             }
 
             string selectedProcessText = lstProcesses.SelectedItem.ToString();
-            // PID değerini metinden ayıkla
             int pidStart = selectedProcessText.LastIndexOf("PID: ") + 5;
             int pidEnd = selectedProcessText.LastIndexOf(")");
             int pid = int.Parse(selectedProcessText.Substring(pidStart, pidEnd - pidStart));
@@ -144,11 +143,11 @@ namespace ProcessEngine
             if (success)
             {
                 lblStatus.Text = $"Durum: Başarıyla enjekte edildi -> {dllName} (PID: {pid})";
-                MessageBox.Show($"DLL başarıyla enjekte edildi!", "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("DLL başarıyla enjekte edildi!", "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
-                lblStatus.Text = $"Durum: Enjeksiyon başarısız! Yetki yetersiz olabilir.";
+                lblStatus.Text = "Durum: Enjeksiyon başarısız! Yetki yetersiz olabilir.";
                 MessageBox.Show("Enjeksiyon başarısız oldu. Yönetici hakları gerekebilir.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
