@@ -13,32 +13,42 @@ namespace ProcessEngine
             Console.WriteLine("=========================================\n");
 
             ProcessManager manager = new ProcessManager();
+            string targetProcess = "";
 
+            // Eğer özel .mengine uzantılı bir dosyaya çift tıklandıysa veya argüman olarak verildiyse
             if (args.Length > 0)
             {
                 string filePath = args[0];
                 if (File.Exists(filePath) && Path.GetExtension(filePath).Equals(".mengine", StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine($"[*] Özel uzantılı dosya algılandı: {Path.GetFileName(filePath)}");
-                    // Burada dosya içerisindeki komutlar okunup işlenebilir
+                    Console.WriteLine($"[*] Özel uzantılı profil okunuyor: {Path.GetFileName(filePath)}");
+                    string[] lines = File.ReadAllLines(filePath);
+                    foreach (var line in lines)
+                    {
+                        if (line.StartsWith("target=", StringComparison.OrdinalIgnoreCase))
+                        {
+                            targetProcess = line.Split('=')[1].Trim();
+                        }
+                    }
                 }
             }
 
-            // Örnek test döngüsü: Kullanıcıdan hedef süreç adı alalım (örn: notepad)
-            Console.Write("Hedef süreç adını girin (Örn: notepad): ");
-            string target = Console.ReadLine();
-
-            if (!string.IsNullOrEmpty(target))
+            // Eğer dosyadan hedef bulunamadıysa kullanıcıdan iste
+            if (string.IsNullOrEmpty(targetProcess))
             {
-                // Uzantı .exe ise temizle
-                target = target.Replace(".exe", "", StringComparison.OrdinalIgnoreCase);
+                Console.Write("Hedef süreç adını girin (Örn: notepad): ");
+                targetProcess = Console.ReadLine();
+            }
 
-                Console.WriteLine($"[*] {target} için tarama başlatılıyor...");
-                manager.ScanAndAttach(target);
+            if (!string.IsNullOrEmpty(targetProcess))
+            {
+                targetProcess = targetProcess.Replace(".exe", "", StringComparison.OrdinalIgnoreCase);
 
-                Console.WriteLine("\n[*] Çoklu görev döngüsü çalışıyor. Çıkmak için bir tuşa basın...");
+                Console.WriteLine($"[*] '{targetProcess}' için çoklu görev taraması başlatılıyor...");
+                manager.ScanAndAttach(targetProcess);
+
+                Console.WriteLine("\n[*] Motor aktif. Çıkmak için bir tuşa basın...");
                 
-                // Örnek çoklu görev: Aktif süreçlerin durumunu periyodik kontrol et
                 manager.RunMultiTaskOperation(task =>
                 {
                     Console.WriteLine($"[Bilgi] Aktif Görev Takipte -> PID: {task.ProcessId}");
