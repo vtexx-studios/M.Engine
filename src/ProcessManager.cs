@@ -1,84 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace ProcessEngine
 {
-    public class ProcessTask
-    {
-        public string TargetName { get; set; }
-        public IntPtr ProcessHandle { get; set; }
-        public int ProcessId { get; set; }
-        public bool IsActive => ProcessHandle != IntPtr.Zero;
-    }
-
     public class ProcessManager
     {
-        private readonly List<ProcessTask> _activeTasks = new List<ProcessTask>();
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool IsWow64Process(IntPtr hProcess, out bool lpSystemInfo);
 
-        public void ScanAndAttach(string processName)
+        // Sürecin x86 mi yoksa x64 mü olduğunu tespit eder
+        public static string GetProcessArchitecture(Process proc)
         {
-            Process[] localProcesses = Process.GetProcessesByName(processName);
-            if (localProcesses.Length == 0)
+            if (!Environment.Is64BitOperatingSystem) return "x86";
+            try
             {
-                Console.WriteLine($"[!] Hedef bulunamadı: {processName}");
-                return;
+                return IsWow64Process(proc.Handle, out bool isWow64) && isWow64 ? "x86" : "x64";
             }
-
-            foreach (var proc in localProcesses)
+            catch
             {
-                // Zaten ekli mi kontrol et
-                if (_activeTasks.Exists(t => t.ProcessId == proc.Id)) continue;
-
-                IntPtr hProcess = MemoryEngine.OpenTargetProcess(proc.Id);
-                if (hProcess != IntPtr.Zero)
-                {
-                    _activeTasks.Add(new ProcessTask
-                    {
-                        TargetName = processName,
-                        ProcessHandle = hProcess,
-                        ProcessId = proc.Id
-                    });
-                    Console.WriteLine($"[+] Başarıyla bağlandı -> Süreç: {processName} (PID: {proc.Id})");
-                }
-                else
-                {
-                    Console.WriteLine($"[!] Bağlanılamadı (Yetki yetersiz olabilir) -> {processName} (PID: {proc.Id})");
-                }
+                return "Bilinmiyor";
             }
-        }
-
-        public void RunMultiTaskOperation(Action<ProcessTask> operation)
-        {
-            // Çoklu görev (Parallel / Multithreading) ile tüm aktif süreçlerde eşzamanlı işlem yap
-            Parallel.ForEach(_activeTasks, task =>
-            {
-                if (task.IsActive)
-                {
-                    try
-                    {
-                        operation(task);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[Hata] PID {task.ProcessId} üzerinde işlem yapılırken hata: {ex.Message}");
-                    }
-                }
-            });
-        }
-
-        public void Cleanup()
-        {
-            foreach (var task in _activeTasks)
-            {
-                if (task.IsActive)
-                {
-                    MemoryEngine.CloseProcess(task.ProcessHandle);
-                    Console.WriteLine($"[-] Bağlantı kapatıldı -> PID: {task.ProcessId}");
-                }
-            }
-            _activeTasks.Clear();
         }
     }
 }
