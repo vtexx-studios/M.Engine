@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -11,7 +10,6 @@ namespace ProcessEngine
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool IsWow64Process(IntPtr hProcess, out bool lpSystemInfo);
 
-        // Sürecin x86 mi yoksa x64 mü olduğunu tespit eder
         public static string GetProcessArchitecture(Process proc)
         {
             if (!Environment.Is64BitOperatingSystem) return "x86";
@@ -21,7 +19,7 @@ namespace ProcessEngine
             }
             catch
             {
-                return "Bilinmiyor";
+                return "Unknown";
             }
         }
     }
