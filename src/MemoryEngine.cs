@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -33,35 +34,46 @@ namespace ProcessEngine
         private const uint MEM_RESERVE = 0x2000;
         private const uint PAGE_READWRITE = 0x04;
 
-        public static IntPtr OpenTargetProcess(int processId)
+        public static bool InjectDll(int processId, string dllPath, out string errorDetails)
         {
-            return OpenProcess(PROCESS_ALL_ACCESS, false, processId);
-        }
-
-        // Gerçek DLL Injection Fonksiyonu
-        public static bool InjectDll(int processId, string dllPath)
-        {
-            IntPtr hProcess = OpenTargetProcess(processId);
-            if (hProcess == IntPtr.Zero) return false;
+            errorDetails = string.Empty;
+            IntPtr hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, processId);
+            if (hProcess == IntPtr.Zero)
+            {
+                errorDetails = $"OpenProcess Hatası: {Marshal.GetLastWin32Error()}";
+                return false;
+            }
 
             try
             {
-                // 1. DLL yolunu hedef sürecin belleğine yazmak için yer aç
                 IntPtr pDllPath = VirtualAllocEx(hProcess, IntPtr.Zero, (uint)((dllPath.Length + 1) * Marshal.SizeOf(typeof(char))), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-                if (pDllPath == IntPtr.Zero) return false;
+                if (pDllPath == IntPtr.Zero)
+                {
+                    errorDetails = $"VirtualAllocEx Hatası: {Marshal.GetLastWin32Error()}";
+                    return false;
+                }
 
-                // 2. DLL yolunu hedef sürecin bellek alanına kopyala
                 byte[] bytes = Encoding.ASCII.GetBytes(dllPath);
-                if (!WriteProcessMemory(hProcess, pDllPath, bytes, bytes.Length, out _)) return false;
+                if (!WriteProcessMemory(hProcess, pDllPath, bytes, bytes.Length, out _))
+                {
+                    errorDetails = $"WriteProcessMemory Hatası: {Marshal.GetLastWin32Error()}";
+                    return false;
+                }
 
-                // 3. Kernel32.dll içindeki LoadLibraryA adresini bul
                 IntPtr hKernel32 = GetModuleHandle("kernel32.dll");
                 IntPtr pLoadLibrary = GetProcAddress(hKernel32, "LoadLibraryA");
-                if (pLoadLibrary == IntPtr.Zero) return false;
+                if (pLoadLibrary == IntPtr.Zero)
+                {
+                    errorDetails = "LoadLibraryA adresi bulunamadı.";
+                    return false;
+                }
 
-                // 4. Uzak thread oluşturarak hedef süreçte LoadLibraryA(pDllPath) çalıştır
                 IntPtr hThread = CreateRemoteThread(hProcess, IntPtr.Zero, 0, pLoadLibrary, pDllPath, 0, out _);
-                if (hThread == IntPtr.Zero) return false;
+                if (hThread == IntPtr.Zero)
+                {
+                    errorDetails = $"CreateRemoteThread Hatası (Anti-cheat engeli olabilir): {Marshal.GetLastWin32Error()}";
+                    return false;
+                }
 
                 CloseHandle(hThread);
                 return true;
@@ -70,11 +82,6 @@ namespace ProcessEngine
             {
                 CloseHandle(hProcess);
             }
-        }
-
-        public static void CloseProcess(IntPtr hProcess)
-        {
-            CloseHandle(hProcess);
         }
     }
 }
