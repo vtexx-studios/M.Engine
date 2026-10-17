@@ -122,7 +122,7 @@ namespace ProcessEngine
             }
             catch (Exception ex)
             {
-                e => _ = ex.Message;
+                string err = ex.Message;
                 return "Scan failed.";
             }
         }
