@@ -57,7 +57,7 @@ namespace ProcessEngine
             this.Controls.Add(lstProcesses);
 
             // DLL Selection Menu
-            Label lblDll = new Label { Text = "Target DLL:", Location = new Point(405, 15, Width = 250), Size = new Size(250, 20) };
+            Label lblDll = new Label { Text = "Target DLL:", Location = new Point(405, 15), Size = new Size(250, 20) };
             this.Controls.Add(lblDll);
 
             cmbDlls = new ComboBox { Location = new Point(405, 42), Size = new Size(250, 25), DropDownStyle = ComboBoxStyle.DropDownList };
