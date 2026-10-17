@@ -75,7 +75,7 @@ namespace ProcessEngine
             Label lblLog = new Label { Text = "İşlem Logları:", Location = new Point(12, 310), Size = new Size(380, 20) };
             this.Controls.Add(lblLog);
 
-            txtLogs = new TextBox { Location = new Point(12, 335, Width = 608), Size = new Size(608, 95), Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, BackColor = Color.Black, ForeColor = Color.Lime };
+            txtLogs = new TextBox { Location = new Point(12, 335), Size = new Size(608, 95), Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, BackColor = Color.Black, ForeColor = Color.Lime };
             this.Controls.Add(txtLogs);
 
             // Durum Çubuğu
