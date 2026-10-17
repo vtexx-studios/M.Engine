@@ -31,7 +31,7 @@ namespace ProcessEngine
 
         public MainForm()
         {
-            this.Text = "M.Engine - Advanced Process & DLL Injector (Admin Mode)";
+            this.Text = "M.Engine - Advanced Process & DLL Injector";
             this.Width = 650;
             this.Height = 520;
             this.StartPosition = FormStartPosition.CenterScreen;
